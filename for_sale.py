@@ -1,5 +1,11 @@
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
+from gymnasium.spaces import Discrete, Box
+import numpy as np
+import functools
+
+
+
 
 class CustomEnvironment(AECEnv):
     metadata = {
@@ -7,26 +13,43 @@ class CustomEnvironment(AECEnv):
     }
 
     def __init__(self):
-        self.agents = ["agent_0", "agent_1", "agent_2", "agent_3"]
-        self.possible_agents = self.agents[:]
-
-        self.terminations = {}
-        self.truncations = {}
-
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.reset()
+        self.possible_agents = ["player_" + str(r) for r in range(4)]
 
     def reset(self, seed=None, options=None):
-        pass
+        self.agents = self.possible_agents[:]
+        self.rewards = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        self.terminations = {agent: False for agent in self.agents}
+        self.truncations = {agent: False for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents}
+        self._agent_selector = agent_selector(self.agents)
+        self.agent_selection = self._agent_selector.next()
+
 
     def step(self, actions):
         pass
 
     def render(self):
+        print("hi")
+
+    def close(self):
         pass
 
-    def observation_space(self, agent):
-        return self.observation_spaces[agent]
+    def observe(self, agent):
+        """
+        Observe should return the observation of the specified agent. This function
+        should return a sane observation (though not necessarily the most up to date possible)
+        at any time after reset() is called.
+        """
+        # observation of one agent is the previous state of the other
+        obs = np.array([1, 2, 3, 4])
+        return obs
 
+    @functools.lru_cache(maxsize=None)
+    def observation_space(self, agent):
+        b = Box(low=-1, high=17, shape=(4,), dtype=int)
+        return b
+
+    @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
-        return self.action_spaces[agent]
+        return Discrete(17)
